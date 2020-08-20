@@ -19,8 +19,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        # ARM/ARM64 don't build/link, omit [amd64_arm, amd64_arm64] for now..
-        arch: [x64, x86]
+        arch: [x86, x64, x64_arm, x64_arm64]
 
     steps:
       - name: Checkout repository
@@ -51,7 +50,18 @@ jobs:
 
       # Actually run the build
       - name: Build ${{ matrix.arch }}
+        env:
+          # Tell detours what process to target
+          DETOURS_TARGET_PROCESSOR: ${{ env.VSCMD_ARG_TGT_ARCH }}
         run: nmake
+
+      # Upload artifacts for this subsection of the build matrix.
+      - uses: actions/upload-artifact@v2
+        with:	
+          path: |
+            lib.*/
+            bin.*/
+            include/
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
